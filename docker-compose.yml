@@ -1,0 +1,23 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    container_name: sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "MyStrongPassw0rd!"
+      MSSQL_TCP_PORT: "1433"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+      - ./datasets:/datasets
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "MyStrongPassw0rd!", "-Q", "SELECT 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  sqldata:
