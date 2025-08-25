@@ -55,7 +55,7 @@ CREATE TABLE bronze.crm_sales_details (
 
 DROP TABLE IF EXISTS bronze.erp_cust_az12;
 
-CREATE TABLE bronze.erp_erp_cust_az12 (
+CREATE TABLE bronze.erp_cust_az12 (
 	cid NVARCHAR(50),
 	bdate DATE,
 	gen NVARCHAR(50)
