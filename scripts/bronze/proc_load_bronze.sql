@@ -89,6 +89,7 @@
 	             (
 	                    firstrow = 2,
 	                    fieldterminator = ',',
+	                    ROWTERMINATOR = '0x0d0a',
 	                    tablock
 	             );
 	      SET @end_time = GETDATE();
@@ -105,6 +106,7 @@
 	             (
 	                    firstrow = 2,
 	                    fieldterminator = ',',
+	                    ROWTERMINATOR = '0x0d0a',
 	                    tablock
 	             );
 	      SET @end_time = GETDATE();
@@ -121,6 +123,7 @@
 	             (
 	                    firstrow = 2,
 	                    fieldterminator = ',',
+	                    ROWTERMINATOR = '0x0d0a',
 	                    tablock
 	             );
 	      SET @end_time = GETDATE();
@@ -143,3 +146,4 @@
 		PRINT('=================================================');
 		END catch
 	END
+	
