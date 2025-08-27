@@ -27,7 +27,7 @@ PRINT('-------------------------------------------------');
 PRINT('Loading CRM Tables');
 PRINT('-------------------------------------------------');
 
-
+SET @start_time = GETDATE();
 PRINT('>>Truncating table: silver.crm_cust_info')
 TRUNCATE TABLE silver.crm_cust_info;
 
@@ -60,6 +60,12 @@ FROM bronze.crm_cust_info
 WHERE cst_id IS NOT NULL
 ) t1 WHERE flag_last = 1
 
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
+
+
+SET @start_time = GETDATE();
 PRINT('>>Truncating table: silver.crm_prd_info')
 TRUNCATE TABLE silver.crm_prd_info;
 
@@ -91,7 +97,13 @@ CAST(prd_start_dt AS DATE) AS prd_start_dt,
 CAST(LEAD (prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt) - 1 AS DATE) as prd_end_dt -- Calculate end date based on the next start date minus 1 day
 FROM bronze.crm_prd_info;
 
-PRINT('>>Truncating table: silver.sales_details')
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
+
+SET @start_time = GETDATE();
+
+PRINT('>>Truncating table: silver.crm_sales_details')
 TRUNCATE TABLE silver.crm_sales_details;
 
 PRINT('>>Inserting data into: silver.crm_sales_details')
@@ -128,12 +140,86 @@ CASE WHEN sls_price IS NULL OR sls_price <= 0 THEN sls_sales / NULLIF(sls_quanti
 END AS sls_price
 FROM bronze.crm_sales_details;
 
-
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
 
 
 PRINT('-------------------------------------------------');
 PRINT('Loading ERP Tables');
 PRINT('-------------------------------------------------');
+
+SET @start_time = GETDATE();
+
+PRINT('>>Truncating table: silver.erp_cust_az12')
+TRUNCATE TABLE silver.erp_cust_az12;
+
+PRINT('>>Inserting data into: silver.erp_cust_az12')
+ INSERT INTO silver.erp_cust_az12 (
+cid,
+bdate,
+gen
+)
+
+SELECT 
+CASE WHEN cid LIKE 'NAS%' THEN SUBSTRING(cid,4,len(cid ))
+ELSE cid
+END AS cid,
+CASE WHEN bdate > GETDATE() THEN NULL
+	ELSE bdate 
+END AS bdate,
+CASE WHEN UPPER(TRIM(gen)) in ('F','FEMALE') THEN 'Female'
+	WHEN UPPER(TRIM(gen)) in ('M','MALE') THEN 'Male'
+	ELSE 'n/a'
+END AS gen
+FROM
+bronze.erp_cust_az12
+
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
+
+SET @start_time = GETDATE();
+
+PRINT('>>Truncating table: silver.erp_loc_a101')
+TRUNCATE TABLE silver.erp_loc_a101
+
+PRINT('>>Inserting data into: silver.erp_loc_a101')
+INSERT INTO silver.erp_loc_a101  (
+cid,
+cntry
+)
+SELECT
+REPLACE(cid, '-', '') AS cid, 
+CASE
+	WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+	WHEN TRIM(cntry) IN ('US', 'USA') THEN 'United States'
+	WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
+	ELSE TRIM(cntry)
+END AS cntry -- Normalize and Handle missing or blank country codes
+	FROM bronze.erp_loc_a101;
+
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
+
+
+SET @start_time = GETDATE();
+
+PRINT('>>Truncating table: silver.erp_px_cat_g1v2')
+TRUNCATE TABLE silver.erp_px_cat_g1v2
+
+PRINT('>>Inserting data into: silver.erp_px_cat_g1v2')
+INSERT INTO silver.erp_px_cat_g1v2 (id,cat,subcat,maintenance)
+
+SELECT id, cat, subcat, maintenance
+FROM bronze.erp_px_cat_g1v2;
+
+SET @end_time = GETDATE();
+PRINT '>> Load duration: ' + CAST(DATEDIFF(second,@start_time,@end_time) AS NVARCHAR) + ' seconds';
+PRINT '>> --------------------'
+
+
 
 
 SET @batch_end_time = GETDATE();
@@ -151,3 +237,4 @@ SET @batch_end_time = GETDATE();
 	PRINT('=================================================');
 	END catch
 END
+
